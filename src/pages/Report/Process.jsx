@@ -24,7 +24,7 @@ const ProcessDetails = ({ catchData, projectName, groupName }) => {
     const fetchProcessData = async () => {
       setLoading(true);
       try {
-        const response = await API.get(`/Reports/process-wise/${catchData.catchNo}`);
+        const response = await API.get(`/Reports/process-wise/${projectName}/${catchData.catchNo}`);
         console.log(response.data)
         setProcessData(response.data);
       } catch (error) {
