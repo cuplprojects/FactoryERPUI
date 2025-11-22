@@ -134,6 +134,7 @@ const NoticeBoard = ({ show, onHide, dispatchData }) => {
                                             <th>Exam To</th>
                                             <th>Count</th>
                                             <th>Qty</th>
+                                            <th>Dispatch Date</th>
 
                                         </tr>
                                     </thead>
@@ -154,6 +155,7 @@ const NoticeBoard = ({ show, onHide, dispatchData }) => {
                                                     <td>{formatDate(task.toDate)}</td>
                                                     <td>{task.totalCatchNo}</td>
                                                     <td>{task.totalQuantity}</td>
+                                                    <td>{task.dispatchDate}</td>
                                                 </tr>
                                             );
                                         })}
