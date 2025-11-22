@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Offcanvas, Accordion, Table } from 'react-bootstrap';
+import { Button, Offcanvas, Accordion, Table, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { MdNotifications, MdClose } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 import themeStore from './../../store/themeStore';
 import useProjectMap from './../../CustomHooks/ApiServices/useProjectMap';
-import axios from 'axios';
 import API from './../../CustomHooks/MasterApiHooks/api';
+import { FaInfoCircle } from 'react-icons/fa';
 
 const formatDate = (date) => {
     if (!date) return '-';
@@ -106,7 +106,7 @@ const NoticeBoard = ({ show, onHide, dispatchData }) => {
                                                     <td>{formatDate(summary.examTo)}</td>
                                                     <td>{summary.totalCatches || 0}</td>
                                                     <td>{summary.totalQuantity || 0}</td>
-                                                   {/* <td>{task.boxCount}</td> */} 
+                                                    {/* <td>{task.boxCount}</td> */}
                                                 </tr>
                                             );
                                         })}
@@ -135,7 +135,7 @@ const NoticeBoard = ({ show, onHide, dispatchData }) => {
                                             <th>Count</th>
                                             <th>Qty</th>
                                             <th>Dispatch Date</th>
-
+                                            <th>Completion Percentage</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -156,6 +156,27 @@ const NoticeBoard = ({ show, onHide, dispatchData }) => {
                                                     <td>{task.totalCatchNo}</td>
                                                     <td>{task.totalQuantity}</td>
                                                     <td>{task.dispatchDate}</td>
+                                                    <td>
+                                                        {task.totalLotPercentage[task.lotNo]}%
+                                                        {task.processPercentagesByName[task.lotNo] && (
+                                                            <OverlayTrigger
+                                                                placement="top"
+                                                                overlay={
+                                                                    <Tooltip id={`tooltip-${task.projectId}-${task.lotNo}`}>
+                                                                        {Object.entries(task.processPercentagesByName[task.lotNo]).map(([process, perc]) => (
+                                                                            <div key={process}>
+                                                                                {process}: {perc}%
+                                                                            </div>
+                                                                        ))}
+                                                                    </Tooltip>
+                                                                }
+                                                            >
+                                                                <span style={{ marginLeft: '5px', cursor: 'pointer', color: '#0d6efd' }}>
+                                                                    <FaInfoCircle />
+                                                                </span>
+                                                            </OverlayTrigger>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             );
                                         })}

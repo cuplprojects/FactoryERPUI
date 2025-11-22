@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
   Button,
-  Select,
   Table,
   Input,
   Checkbox,
-  Tag,
   Form,
   Row,
   Col,
@@ -25,6 +23,7 @@ import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { decrypt } from "../Security/Security";
 import CatchTransferModal from "../menus/CatchTransferModal";
+import CatchMergeModal from "../menus/CatchMergeModal";
 
 const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const { t } = useTranslation();
@@ -57,6 +56,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showStopModal, setShowStopModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [itemToStop, setItemToStop] = useState(null);
   const [showNewRow, setShowNewRow] = useState(false);
@@ -83,7 +83,6 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   const [dates, setDates] = useState([]);
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
-  const [isinTransaction, setIsInTransaction] = useState([]);
   const [editableRowKey, setEditableRowKey] = useState(null); // Track editable row
   const [editedRow, setEditedRow] = useState({}); // Store edited row data
 
@@ -138,25 +137,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       width: 100,
       sorter: (a, b) => a.paper.localeCompare(b.paper),
       render: (text, record) => {
-
         if (editableRowKey === record.key) {
-
           return (
-
             <Input
-
               value={editedRow.paper}
-
               onChange={(e) => handleInputChange("paper", e.target.value)}
-
             />
-
           );
-
         }
-
         return text;
-
       },
     },
     {
@@ -166,25 +155,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       width: 100,
       sorter: (a, b) => a.course.localeCompare(b.course),
       render: (text, record) => {
-
         if (editableRowKey === record.key) {
-
           return (
-
             <Input
-
               value={editedRow.course}
-
               onChange={(e) => handleInputChange("course", e.target.value)}
-
             />
-
           );
-
         }
-
         return text;
-
       },
     },
     {
@@ -194,25 +173,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       width: 100,
       sorter: (a, b) => a.subject.localeCompare(b.subject),
       render: (text, record) => {
-
         if (editableRowKey === record.key) {
-
           return (
-
             <Input
-
               value={editedRow.subject}
-
               onChange={(e) => handleInputChange("subject", e.target.value)}
-
             />
-
           );
-
         }
-
         return text;
-
       },
     },
     {
@@ -239,28 +208,18 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         </span>
       ),
       render: (text, record) => {
-
         if (editableRowKey === record.key) {
-
           return (
-
             <Input
-
-              //value={editedRow.examDate}
               value={editedRow.examDate} // Use the formatted date
               type="date"
               min={minDate}
               max={maxDate}
               onChange={(e) => handleInputChange("examDate", e.target.value)}
-
             />
-
           );
-
         }
-
         return text;
-
       },
     },
     {
@@ -270,25 +229,15 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       width: 100,
       sorter: (a, b) => a.examTime.localeCompare(b.examTime),
       render: (text, record) => {
-
         if (editableRowKey === record.key) {
-
           return (
-
             <Input
-
               value={editedRow.examTime}
-
               onChange={(e) => handleInputChange("examTime", e.target.value)}
-
             />
-
           );
-
         }
-
         return text;
-
       },
     },
     {
@@ -304,6 +253,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "outerEnvelope",
       width: 100,
       sorter: (a, b) => a.outerEnvelope.localeCompare(b.outerEnvelope),
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.outerEnvelope}
+              onChange={(e) => handleInputChange("outerEnvelope", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("quantity"),
@@ -311,6 +271,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
       key: "quantity",
       width: 100,
       sorter: (a, b) => a.quantity - b.quantity,
+      render: (text, record) => {
+        if (editableRowKey === record.key) {
+          return (
+            <Input
+              value={editedRow.quantity}
+              onChange={(e) => handleInputChange("quantity", e.target.value)}
+            />
+          );
+        }
+        return text;
+      },
     },
     {
       title: t("pages"),
@@ -633,6 +604,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
   const handleModalClose = () => {
     setShowTransferModal(false);
+    setShowMergeModal(false);
     setShowDeleteModal(false);
     setItemToDelete(null);
     setEditingRow(null);
@@ -753,7 +725,7 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
         percentageCatch: 0,
         projectId: projectId,
         status: 0,
-        stopCatch:0
+        stopCatch: 0
       });
       setFormErrors({});
       fetchQuantity(selectedLotNo);
@@ -763,30 +735,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   };
 
   const handleStopButtonClick = (key) => {
-
     const record = dataSource.find((item) => item.key === key);
-
     if (record) {
-
       setItemToStop(record);
-
       setShowStopModal(true);
-
     }
-
   };
 
 
-
-
-
   const handleCatchEditButton = (key) => {
-
     setEditableRowKey(key?.quantitySheetId); // Set the row key to editable
-
     const formattedExamDate = formatDateForInput(key.examDate);
-
-    // Initialize with the existing row data and formatted examDate
     setEditedRow({ ...key, examDate: formattedExamDate });
   };
 
@@ -796,57 +755,33 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
   };
 
   const handleInputChange = (field, value) => {
-
     setEditedRow({ ...editedRow, [field]: value }); // Update edited row data
-
   };
 
   const handleSave = async () => {
-
     try {
-
       const response = await API.put(
-
         `/QuantitySheet/update/${editedRow.quantitySheetId}`,
-
         editedRow
-
       );
-
-
-
       if (response.status === 200) {
-
         message.success(t("updateSuccess"));
-
         setEditableRowKey(null); // Exit edit mode
-
         fetchQuantity()
-
       } else {
-
         message.error(t("updateFailed"));
-
       }
-
     } catch (error) {
-
       console.error(error);
-
       message.error(t("updateFailed"));
-
     }
-
   };
 
 
 
   const handleCancel = () => {
-
     setEditableRowKey(null); // Exit edit mode
-
     setEditedRow({}); // Reset edited row
-
   };
 
 
@@ -917,8 +852,16 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
                   </Button>
                 </>
               )}
+              {selectedCatches.length > 1 && !dispatchedLots.includes(selectedLotNo) && (
 
-
+                <Button
+                  type="primary"
+                  className={`${customBtn} ${customDark === "dark-dark" ? `border` : `border-0`} me-2`}
+                  onClick={() => setShowMergeModal(true)}
+                >
+                  {t('mergeCatch')}
+                </Button>
+              )}
               <Button
                 onClick={() => setShowNewRow(prev => !prev)}
                 type="primary"
@@ -1228,10 +1171,10 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
               {t("cancel")}
             </Button>
             <Button variant="danger" onClick={handleConfirmStop}>
-            {itemToStop.stopCatch === 0
-              ?t("stop")
-              : t("resume")
-            }
+              {itemToStop.stopCatch === 0
+                ? t("stop")
+                : t("resume")
+              }
             </Button>
           </BootstrapModal.Footer>
         </BootstrapModal>
@@ -1240,6 +1183,17 @@ const ViewQuantitySheet = ({ selectedLotNo, showBtn, showTable, lots }) => {
 
       <CatchTransferModal
         visible={showTransferModal}
+        onClose={handleModalClose}
+        catches={selectedCatches}
+        onCatchesChange={handleCatchesChange}
+        projectId={projectId}
+        fetchQuantity={fetchQuantity}
+        lots={lots}
+        selectedLotNo={selectedLotNo}
+        dispatchedLots={dispatchedLots}
+      />
+      <CatchMergeModal
+        visible={showMergeModal}
         onClose={handleModalClose}
         catches={selectedCatches}
         onCatchesChange={handleCatchesChange}

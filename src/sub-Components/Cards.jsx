@@ -40,6 +40,9 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
       fetchProjectProcess();
       checkTransactionStatus();
     }
+    if (parseFloat(item?.completionPercentage) >= 99.95) {
+      setTransactionStatus("Completed");
+    }
   }, [item?.projectId]);
 
   // Navigate to quantity sheet uploads and send projectId
@@ -71,6 +74,10 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
 
   // Check transaction status
   const checkTransactionStatus = async () => {
+    if (parseFloat(item?.completionPercentage) >= 99.95) {
+      setTransactionStatus("Completed");
+      return;
+    }
     try {
       const response = await API.get(`/Transactions/exists/${item.projectId}`);
       setTransactionStatus(response.data ? "Running" : "Pending");
@@ -173,11 +180,11 @@ const Cards = ({ item, onclick, disableProject, activeCardStyle }) => {
             </Tooltip>
           </div>
           <p className="p-0 m-0">
-            {parseFloat(item.completionPercentage) >= 99.99 ? 100 : parseFloat(item.completionPercentage).toFixed(2)}%
+            {parseFloat(item.completionPercentage) >= 99.96 ? 100 : parseFloat(item.completionPercentage).toFixed(2)}%
             {t("completed")}
           </p>
           <p className="p-0 m-0">
-            {parseFloat(item.completionPercentage) >= 99.99 ? 0 : parseFloat(item.remainingPercentage).toFixed(2)}%
+            {parseFloat(item.completionPercentage) >= 99.96 ? 0 : parseFloat(item.remainingPercentage).toFixed(2)}%
             {t("remaining")}
           </p>
           <p className="p-0 m-0">Status: {transactionStatus}</p>
