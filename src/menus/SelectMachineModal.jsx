@@ -92,7 +92,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           console.log('Existing Transaction Data:', existingTransactionData);
         }
 
-        const postData = {
+        const postData =data.map(row => ({
           transactionId: row.transactionId || 0,
           interimQuantity: row.interimQuantity,
           remarks: existingTransactionData ? existingTransactionData.remarks : '',
@@ -106,9 +106,9 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
           lotNo: row.lotNo,
           teamId: existingTransactionData ? existingTransactionData.teamId : [],
           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-        };
-
-        await API.post('/Transactions', postData);
+        }));
+ // changed /Transactions to /Transactions/Bulk
+        await API.post('/Transactions/Bulk', postData);
       });
 
       await Promise.all(updatePromises);
