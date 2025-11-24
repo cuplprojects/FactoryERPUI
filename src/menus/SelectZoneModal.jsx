@@ -29,6 +29,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
   const getZone = async () => {
     try {
       const response = await API.get('/Zones');
+
       setZoneOptions(response.data);
     } catch (error) {
       console.error("Failed to fetch zone options", error);
@@ -37,7 +38,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
 
   useEffect(() => {
     getZone();
-  }, []); 
+  }, [show]); 
 
   const handleConfirm = async () => {
     try {

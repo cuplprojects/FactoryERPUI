@@ -41,6 +41,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
     try {
       const response = await API.get('/Machines');
       const filteredMachines = response.data.filter(machine => machine.processId === processId);
+    
 
       const machineWithZoneData = filteredMachines.map(machine => ({
         value: machine.machineId,
@@ -74,7 +75,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
   useEffect(() => {
     getMachine();
     getZoneData();
-  }, []);
+  }, [show]);
 
   const handleConfirm = async () => {
     try {
