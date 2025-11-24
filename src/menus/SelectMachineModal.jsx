@@ -24,15 +24,17 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
   const handleMachineChange = (selectedOption) => {
     setSelectedMachine(selectedOption);
     setMachineId(selectedOption ? selectedOption.value : null);
+    console.log("Selected Machine:", selectedOption);
   
     // Find the associated zone data for the selected machine
     const selectedMachineData = machineOptions.find(machine => machine.value === selectedOption.value);
-  
+  console.log("Selected Machine Data:", selectedMachineData);
     if (selectedMachineData) {
       // Ensure machineIds is defined and an array before calling .includes
       const associatedZone = zoneData.find(zone => Array.isArray(zone.machineId) && zone.machineId.includes(selectedOption.value));
-  
+  console.log("Associated Zone:", associatedZone);
       setSelectedZone(associatedZone || null); // Set selected zone data
+      console.log("Selected Zone:", selectedZone);
     }
   };
   
@@ -40,8 +42,9 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
   const getMachine = async () => {
     try {
       const response = await API.get('/Machines');
+      console.log(response.data);
       const filteredMachines = response.data.filter(machine => machine.processId === processId);
-    
+    console.log(filteredMachines);
 
       const machineWithZoneData = filteredMachines.map(machine => ({
         value: machine.machineId,
@@ -50,6 +53,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
       }));
 
       setMachineOptions(machineWithZoneData);
+      console.log('Set machine options:', machineWithZoneData);
     } catch (error) {
       console.error('Failed to fetch machine options', error);
     }
@@ -66,6 +70,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
         machineIds: Array.isArray(zone.machineIds) ? zone.machineIds : [] // Ensure machineIds is always an array
       }));
       setZoneData(sanitizedZoneData); // Store sanitized zone data
+      console.log('Sanitized zone data:', sanitizedZoneData);
     } catch (error) {
       console.error('Failed to fetch zone data', error);
     }
@@ -84,6 +89,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
         if (row.transactionId) {
           const response = await API.get(`/Transactions/${row.transactionId}`);
           existingTransactionData = response.data;
+          console.log('Existing Transaction Data:', existingTransactionData);
         }
 
         const postData = {
@@ -131,6 +137,7 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
             <div className='mb-3'>
               <span className='fw-bold'>{t('totalItems')}: </span>
               {data.length}
+              {console.log(data)}
             </div>
           </>
         ) : (

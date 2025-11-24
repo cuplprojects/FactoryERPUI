@@ -24,12 +24,13 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
     const selectedOption = zoneOptions.find(option => option.zoneNo === e.target.value);
     setSelectedZone(selectedOption ? selectedOption.zoneNo : '');
     setZoneId(selectedOption ? selectedOption.zoneId : null);
+    console.log("Selected Zone:", selectedOption);
   };
 
   const getZone = async () => {
     try {
       const response = await API.get('/Zones');
-
+console.log("Response Data:", response.data);
       setZoneOptions(response.data);
     } catch (error) {
       console.error("Failed to fetch zone options", error);
@@ -47,6 +48,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
         if (row.transactionId) {
           const response = await API.get(`/Transactions/${row.transactionId}`);
           existingTransactionData = response.data;
+          console.log("Existing Transaction Data:", existingTransactionData);
         }
 
         const postData = {
@@ -93,6 +95,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
             <div className='mb-3'>
               <span className='fw-bold'>{t('totalItems')}: </span>
               {data.length}
+              {console.log(data)}
             </div>
           </>
         ) : (
@@ -115,6 +118,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
             {zoneOptions.map(option => (
               <option key={option.zoneId} value={option.zoneNo}>
                 {option.zoneNo}
+                {console.log("Option Value:", option.zoneNo)}
               </option>
             ))}
           </Form.Control>
