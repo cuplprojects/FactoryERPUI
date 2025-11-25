@@ -9,7 +9,8 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
   const [usersInTeam, setUsersInTeam] = useState([]);
   const [userOptions, setUserOptions] = useState([]); // List of users to be added to the team
   const [selectedUserToAdd, setSelectedUserToAdd] = useState(null); // User selected to be added
-  
+  const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
     if (data?.[0]?.teamId) {
       setSelectedTeam(data[0].teamId);
@@ -63,7 +64,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
     }
   };
 
-  const filteredUserOptions = userOptions.filter(user => 
+  const filteredUserOptions = userOptions.filter(user =>
     !usersInTeam.some(teamUser => teamUser.userId === user.userId)
   ).map(user => ({
     value: user.userId,
@@ -92,9 +93,10 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
     }
 
     try {
+      setIsSaving(true);
       for (let item of data) {
         let existingTransactionData;
-        
+
         if (item?.transactionId) {
           const response = await API.get(`/Transactions/${item.transactionId}`);
           existingTransactionData = response.data;
@@ -122,7 +124,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
 
         await API.post('/Transactions', postData);
       }
-      
+
       fetchTransactions();
       notification.success({
         message: 'Success',
@@ -131,6 +133,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
         duration: 3
       });
       handleClose();
+      setIsSaving(false);
     } catch (error) {
       console.error('Error updating team:', error);
       notification.error({
@@ -139,6 +142,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
         placement: 'topRight',
         duration: 3
       });
+      setIsSaving(false);
     }
   };
 
@@ -158,7 +162,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
           )}
         </Col>
       </Row>
-      
+
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
@@ -167,7 +171,7 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
               <option value="">Select a team...</option>
               {teams.map((team) => (
                 <option key={team.teamId} value={team.teamId}>
-                  {team.teamName} 
+                  {team.teamName}
                   {team.users && team.users.length > 0 ? ` (${team.users.map(user => user.fullName).join(', ')})` : ""}
                 </option>
               ))}
@@ -221,12 +225,19 @@ const CatchTeamAssignment = ({ teams, data, handleClose, processId, fetchTransac
 
       <Row>
         <Col md={12}>
-          <Button 
-            variant="success" 
+          <Button
+            variant="success"
             onClick={handleConfirm}
-            disabled={!selectedTeam || usersInTeam.length === 0}
+            disabled={!selectedTeam || usersInTeam.length === 0 || isSaving}
           >
-            Confirm Assignment
+            {isSaving ? (
+              <span>
+                <span className="spinner-border spinner-border-sm me-2" />
+                {t('saving')}...
+              </span>
+            ) : (
+              t('saveChanges')
+            )}
           </Button>
         </Col>
       </Row>
