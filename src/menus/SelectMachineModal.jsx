@@ -13,38 +13,39 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
   const [customDark, customMid, customLight, customBtn, customDarkText, customLightText] = cssClasses;
 
   // Force re-render when theme changes
-  useEffect(() => {}, [cssClasses]);
+  useEffect(() => { }, [cssClasses]);
 
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [machineOptions, setMachineOptions] = useState([]);
   const [machineId, setMachineId] = useState(null);
   const [zoneData, setZoneData] = useState([]); // State to store zone data
   const [selectedZone, setSelectedZone] = useState(null); // State to store selected zone info
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleMachineChange = (selectedOption) => {
     setSelectedMachine(selectedOption);
     setMachineId(selectedOption ? selectedOption.value : null);
     console.log("Selected Machine:", selectedOption);
-  
+
     // Find the associated zone data for the selected machine
     const selectedMachineData = machineOptions.find(machine => machine.value === selectedOption.value);
-  console.log("Selected Machine Data:", selectedMachineData);
+    console.log("Selected Machine Data:", selectedMachineData);
     if (selectedMachineData) {
       // Ensure machineIds is defined and an array before calling .includes
       const associatedZone = zoneData.find(zone => Array.isArray(zone.machineId) && zone.machineId.includes(selectedOption.value));
-  console.log("Associated Zone:", associatedZone);
+      console.log("Associated Zone:", associatedZone);
       setSelectedZone(associatedZone || null); // Set selected zone data
       console.log("Selected Zone:", selectedZone);
     }
   };
-  
+
 
   const getMachine = async () => {
     try {
       const response = await API.get('/Machines');
       console.log(response.data);
       const filteredMachines = response.data.filter(machine => machine.processId === processId);
-    console.log(filteredMachines);
+      console.log(filteredMachines);
 
       const machineWithZoneData = filteredMachines.map(machine => ({
         value: machine.machineId,
@@ -75,95 +76,99 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
       console.error('Failed to fetch zone data', error);
     }
   };
-  
+
 
   useEffect(() => {
     getMachine();
     getZoneData();
   }, [show]);
 
-//   const handleConfirm = async () => {
-//     try {
-//       const updatePromises = data.map(async (row) => {
-//         let existingTransactionData;
-//         if (row.transactionId) {
-//           const response = await API.get(`/Transactions/${row.transactionId}`);
-//           existingTransactionData = response.data;
-//           console.log('Existing Transaction Data:', existingTransactionData);
-//         }
+  //   const handleConfirm = async () => {
+  //     try {
+  //       const updatePromises = data.map(async (row) => {
+  //         let existingTransactionData;
+  //         if (row.transactionId) {
+  //           const response = await API.get(`/Transactions/${row.transactionId}`);
+  //           existingTransactionData = response.data;
+  //           console.log('Existing Transaction Data:', existingTransactionData);
+  //         }
 
-//         const postData =data.map(row => ({
-//           transactionId: row.transactionId || 0,
-//           interimQuantity: row.interimQuantity,
-//           remarks: existingTransactionData ? existingTransactionData.remarks : '',
-//           projectId: row.projectId,
-//           quantitysheetId: row.srNo || 0,
-//           processId: processId,
-//           zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
-//           machineId: machineId,
-//           status: existingTransactionData ? existingTransactionData.status : 0,
-//           alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-//           lotNo: row.lotNo,
-//           teamId: existingTransactionData ? existingTransactionData.teamId : [],
-//           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-//         }));
-//  // changed /Transactions to /Transactions/Bulk
-//         await API.post('/Transactions/Bulk', postData);
-//       });
+  //         const postData =data.map(row => ({
+  //           transactionId: row.transactionId || 0,
+  //           interimQuantity: row.interimQuantity,
+  //           remarks: existingTransactionData ? existingTransactionData.remarks : '',
+  //           projectId: row.projectId,
+  //           quantitysheetId: row.srNo || 0,
+  //           processId: processId,
+  //           zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
+  //           machineId: machineId,
+  //           status: existingTransactionData ? existingTransactionData.status : 0,
+  //           alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+  //           lotNo: row.lotNo,
+  //           teamId: existingTransactionData ? existingTransactionData.teamId : [],
+  //           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+  //         }));
+  //  // changed /Transactions to /Transactions/Bulk
+  //         await API.post('/Transactions/Bulk', postData);
+  //       });
 
-//       await Promise.all(updatePromises);
-//       handleSave(machineId);
-//       setMachineId(null);
-//       setSelectedMachine(null);
-//       setSelectedZone(null); // Reset zone data after confirmation
-//       handleClose();
-//     } catch (error) {
-//       console.error('Error updating machine:', error);
-//     }
-//   };
+  //       await Promise.all(updatePromises);
+  //       handleSave(machineId);
+  //       setMachineId(null);
+  //       setSelectedMachine(null);
+  //       setSelectedZone(null); // Reset zone data after confirmation
+  //       handleClose();
+  //     } catch (error) {
+  //       console.error('Error updating machine:', error);
+  //     }
+  //   };
 
-const handleConfirm = async () => {
-  try {
-    const postData = data.map(async (row) => {
-      let existingTransactionData;
-      if (row.transactionId) {
-        const response = await API.get(`/Transactions/${row.transactionId}`);
-        existingTransactionData = response.data;
-        console.log('Existing Transaction Data:', existingTransactionData);
-      }
+  const handleConfirm = async () => {
 
-      return {
-        transactionId: row.transactionId || 0,
-        interimQuantity: row.interimQuantity,
-        remarks: existingTransactionData ? existingTransactionData.remarks : '',
-        projectId: row.projectId,
-        quantitysheetId: row.srNo || 0,
-        processId: processId,
-        zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
-        machineId: machineId,
-        status: existingTransactionData ? existingTransactionData.status : 0,
-        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-        lotNo: row.lotNo,
-        teamId: existingTransactionData ? existingTransactionData.teamId : [],
-        voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-      };
-    });
+    try {
+      setIsSaving(true);
+      const postData = data.map(async (row) => {
+        let existingTransactionData;
+        if (row.transactionId) {
+          const response = await API.get(`/Transactions/${row.transactionId}`);
+          existingTransactionData = response.data;
+          console.log('Existing Transaction Data:', existingTransactionData);
+        }
 
-    // Wait for all the async operations inside the map to complete
-    const bulkData = await Promise.all(postData);
+        return {
+          transactionId: row.transactionId || 0,
+          interimQuantity: row.interimQuantity,
+          remarks: existingTransactionData ? existingTransactionData.remarks : '',
+          projectId: row.projectId,
+          quantitysheetId: row.srNo || 0,
+          processId: processId,
+          zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
+          machineId: machineId,
+          status: existingTransactionData ? existingTransactionData.status : 0,
+          alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+          lotNo: row.lotNo,
+          teamId: existingTransactionData ? existingTransactionData.teamId : [],
+          voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+        };
+      });
 
-    // Send the bulk data in a single request
-    await API.post('/Transactions/Bulk', bulkData);
+      // Wait for all the async operations inside the map to complete
+      const bulkData = await Promise.all(postData);
 
-    handleSave(machineId);
-    setMachineId(null);
-    setSelectedMachine(null);
-    setSelectedZone(null); // Reset zone data after confirmation
-    handleClose();
-  } catch (error) {
-    console.error('Error updating machine:', error);
-  }
-};
+      // Send the bulk data in a single request
+      await API.post('/Transactions/Bulk', bulkData);
+
+      handleSave(machineId);
+      setMachineId(null);
+      setSelectedMachine(null);
+      setSelectedZone(null); // Reset zone data after confirmation
+      handleClose();
+      setIsSaving(false);
+    } catch (error) {
+      console.error('Error updating machine:', error);
+      setIsSaving(false);
+    }
+  };
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -199,18 +204,26 @@ const handleConfirm = async () => {
         </Form.Group>
       </Modal.Body>
       <Modal.Footer className={`${customLight} ${customDarkText}`}>
-        <Button 
-          variant="danger" 
+        <Button
+          variant="danger"
           onClick={handleClose}
           className={`${customBtn} border-0`}
         >
           {t('close')}
         </Button>
-        <Button 
+        <Button
           onClick={handleConfirm}
           className={`${customBtn} border-0`}
+          disabled={isSaving}
         >
-          {t('saveChanges')}
+          {isSaving ? (
+            <span>
+              <span className="spinner-border spinner-border-sm me-2" />
+              {t('saving')}...
+            </span>
+          ) : (
+            t('saveChanges')
+          )}
         </Button>
       </Modal.Footer>
     </Modal>

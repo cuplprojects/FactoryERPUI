@@ -19,6 +19,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
   const [selectedZone, setSelectedZone] = useState('');
   const [zoneOptions, setZoneOptions] = useState([]);
   const [zoneId, setZoneId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleZoneChange = (e) => {
     const selectedOption = zoneOptions.find(option => option.zoneNo === e.target.value);
@@ -30,7 +31,7 @@ const SelectZoneModal = ({ show, handleClose, data, processId, handleSave }) => 
   const getZone = async () => {
     try {
       const response = await API.get('/Zones');
-console.log("Response Data:", response.data);
+      console.log("Response Data:", response.data);
       setZoneOptions(response.data);
     } catch (error) {
       console.error("Failed to fetch zone options", error);
@@ -39,7 +40,7 @@ console.log("Response Data:", response.data);
 
   useEffect(() => {
     getZone();
-  }, [show]); 
+  }, [show]);
 
   // const handleConfirm = async () => {
   //   try {
@@ -81,48 +82,51 @@ console.log("Response Data:", response.data);
   // };
 
   const handleConfirm = async () => {
-  try {
-    // Create an array of promises to fetch existing transaction data
-    const postData = await Promise.all(data.map(async (row) => {
-      let existingTransactionData;
-      
-      // Fetch existing transaction data if it exists
-      if (row.transactionId) {
-        const response = await API.get(`/Transactions/${row.transactionId}`);
-        existingTransactionData = response.data;
-        console.log("Existing Transaction Data:", existingTransactionData);
-      }
+    try {
+      setIsSaving(true);
+      // Create an array of promises to fetch existing transaction data
+      const postData = await Promise.all(data.map(async (row) => {
+        let existingTransactionData;
 
-      // Build the postData for each row
-      return {
-        transactionId: row.transactionId || 0,
-        interimQuantity: row.interimQuantity,
-        remarks: existingTransactionData ? existingTransactionData.remarks : '',
-        projectId: row.projectId,
-        quantitysheetId: row.srNo || 0,
-        processId: processId,
-        zoneId: zoneId,  // You may need to ensure this is coming from your selected zone
-        machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-        status: existingTransactionData ? existingTransactionData.status : 0,
-        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-        lotNo: row.lotNo,
-        teamId: existingTransactionData ? existingTransactionData.teamId : [],
-        voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-      };
-    }));
+        // Fetch existing transaction data if it exists
+        if (row.transactionId) {
+          const response = await API.get(`/Transactions/${row.transactionId}`);
+          existingTransactionData = response.data;
+          console.log("Existing Transaction Data:", existingTransactionData);
+        }
 
-    // Send the entire bulk data in a single request
-    await API.post('/Transactions/Bulk', postData);
+        // Build the postData for each row
+        return {
+          transactionId: row.transactionId || 0,
+          interimQuantity: row.interimQuantity,
+          remarks: existingTransactionData ? existingTransactionData.remarks : '',
+          projectId: row.projectId,
+          quantitysheetId: row.srNo || 0,
+          processId: processId,
+          zoneId: zoneId,  // You may need to ensure this is coming from your selected zone
+          machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+          status: existingTransactionData ? existingTransactionData.status : 0,
+          alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+          lotNo: row.lotNo,
+          teamId: existingTransactionData ? existingTransactionData.teamId : [],
+          voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+        };
+      }));
 
-    // After successfully sending the bulk data, do the following:
-    handleSave(zoneId);           // Call your handleSave function with zoneId
-    setSelectedZone(null);        // Reset selected zone
-    setZoneId(null);              // Reset zoneId
-    handleClose();                // Close the modal
-  } catch (error) {
-    console.error('Error updating zone:', error);
-  }
-};
+      // Send the entire bulk data in a single request
+      await API.post('/Transactions/Bulk', postData);
+
+      // After successfully sending the bulk data, do the following:
+      handleSave(zoneId);           // Call your handleSave function with zoneId
+      setSelectedZone(null);        // Reset selected zone
+      setZoneId(null);              // Reset zoneId
+      handleClose();
+      setIsSaving(false);             // Close the modal
+    } catch (error) {
+      console.error('Error updating zone:', error);
+      setIsSaving(false);
+    }
+  };
 
 
   return (
@@ -170,19 +174,26 @@ console.log("Response Data:", response.data);
         </Form.Group>
       </Modal.Body>
       <Modal.Footer className={`${customLight} ${customDarkText}`}>
-        <Button 
-          variant="danger" 
+        <Button
+          variant="danger"
           onClick={handleClose}
           className={`${customBtn} border-0`}
         >
           {t('close')}
         </Button>
-        <Button 
+        <Button
           onClick={handleConfirm}
           className={`${customBtn} border-0`}
-           disabled={!zoneId || zoneId === 0}
+          disabled={!zoneId || zoneId === 0 || isSaving}
         >
-          {t('saveChanges')}
+          {isSaving ? (
+            <span>
+              <span className="spinner-border spinner-border-sm me-2" />
+              {t('saving')}...
+            </span>
+          ) : (
+            t('saveChanges')
+          )}
         </Button>
       </Modal.Footer>
     </Modal>
