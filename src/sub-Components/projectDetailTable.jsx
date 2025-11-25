@@ -1030,84 +1030,154 @@ const ProjectDetailsTable = ({
     }
 
     // Iterate over selectedRowKeys and update status
+    // const updates = selectedRowKeys.map(async (key) => {
+    //   const updatedRow = tableData.find((row) => row.srNo === key);
+    //   if (updatedRow) {
+    //     // Fetch existing transaction data if transactionId exists
+    //     let existingTransactionData;
+    //     if (updatedRow.transactionId) {
+    //       try {
+    //         const response = await API.get(
+    //           `/Transactions/${updatedRow.transactionId}`
+    //         );
+    //         existingTransactionData = response.data;
+    //       } catch (error) {
+    //         console.error(`Error fetching transaction data for ${key}:`, error);
+    //       }
+    //     }
+
+    //     const postData = {
+    //       transactionId: updatedRow.transactionId || 0,
+    //       interimQuantity: existingTransactionData
+    //         ? existingTransactionData.interimQuantity
+    //         : 0,
+    //       remarks: existingTransactionData
+    //         ? existingTransactionData.remarks
+    //         : "",
+    //       projectId: projectId,
+    //       quantitysheetId: updatedRow.srNo,
+    //       processId: processId,
+    //       zoneId: existingTransactionData
+    //         ? existingTransactionData.zoneId
+    //         : updatedRow.zoneId || 0,
+    //       machineId: existingTransactionData
+    //         ? existingTransactionData.machineId
+    //         : updatedRow.machineId || 0,
+    //       status: newStatusIndex,
+    //       alarmId: existingTransactionData
+    //         ? existingTransactionData.alarmId
+    //         : updatedRow.alarmId || "",
+    //       teamId: existingTransactionData
+    //         ? existingTransactionData.teamId
+    //         : updatedRow.teamId || [],
+    //       lotNo: existingTransactionData
+    //         ? existingTransactionData.lotNo
+    //         : lotNo,
+    //       voiceRecording: existingTransactionData
+    //         ? existingTransactionData.voiceRecording
+    //         : "",
+    //     };
+
+    //     try {
+    //       await API.post("/Transactions", postData);
+    //     } catch (error) {
+    //       console.error(`Error updating status for ${key}:`, error);
+    //       throw error;
+    //     }
+    //   }
+    // });
+    // try {
+    //   await Promise.all(updates);
+    //   clearSelections();
+    //   await fetchTransactions();
+    //   const updatedCatches = selectedRowKeys
+    //     .map((key) => tableData.find((row) => row.srNo === key)?.catchNumber)
+    //     .filter(Boolean)
+    //     .join(", ");
+    //   showNotification(
+    //     "success",
+    //     "statusUpdateSuccess",
+    //     "statusUpdateDescription",
+    //     `(Catches: ${updatedCatches})`
+    //   );
+    // } catch (error) {
+    //   showNotification(
+    //     "error",
+    //     "statusUpdateError",
+    //     "statusUpdateErrorDescription"
+    //   );
+    //   console.error("Error updating statuses:", error);
+    // }
+
     const updates = selectedRowKeys.map(async (key) => {
-      const updatedRow = tableData.find((row) => row.srNo === key);
-      if (updatedRow) {
-        // Fetch existing transaction data if transactionId exists
-        let existingTransactionData;
-        if (updatedRow.transactionId) {
-          try {
-            const response = await API.get(
-              `/Transactions/${updatedRow.transactionId}`
-            );
-            existingTransactionData = response.data;
-          } catch (error) {
-            console.error(`Error fetching transaction data for ${key}:`, error);
-          }
-        }
-
-        const postData = {
-          transactionId: updatedRow.transactionId || 0,
-          interimQuantity: existingTransactionData
-            ? existingTransactionData.interimQuantity
-            : 0,
-          remarks: existingTransactionData
-            ? existingTransactionData.remarks
-            : "",
-          projectId: projectId,
-          quantitysheetId: updatedRow.srNo,
-          processId: processId,
-          zoneId: existingTransactionData
-            ? existingTransactionData.zoneId
-            : updatedRow.zoneId || 0,
-          machineId: existingTransactionData
-            ? existingTransactionData.machineId
-            : updatedRow.machineId || 0,
-          status: newStatusIndex,
-          alarmId: existingTransactionData
-            ? existingTransactionData.alarmId
-            : updatedRow.alarmId || "",
-          teamId: existingTransactionData
-            ? existingTransactionData.teamId
-            : updatedRow.teamId || [],
-          lotNo: existingTransactionData
-            ? existingTransactionData.lotNo
-            : lotNo,
-          voiceRecording: existingTransactionData
-            ? existingTransactionData.voiceRecording
-            : "",
-        };
-
-        try {
-          await API.post("/Transactions", postData);
-        } catch (error) {
-          console.error(`Error updating status for ${key}:`, error);
-          throw error;
-        }
+  const updatedRow = tableData.find((row) => row.srNo === key);
+  if (updatedRow) {
+    // Fetch existing transaction data if transactionId exists
+    let existingTransactionData;
+    if (updatedRow.transactionId) {
+      try {
+        const response = await API.get(`/Transactions/${updatedRow.transactionId}`);
+        existingTransactionData = response.data;
+      } catch (error) {
+        console.error(`Error fetching transaction data for ${key}:`, error);
       }
-    });
-    try {
-      await Promise.all(updates);
-      clearSelections();
-      await fetchTransactions();
-      const updatedCatches = selectedRowKeys
-        .map((key) => tableData.find((row) => row.srNo === key)?.catchNumber)
-        .filter(Boolean)
-        .join(", ");
-      showNotification(
-        "success",
-        "statusUpdateSuccess",
-        "statusUpdateDescription",
-        `(Catches: ${updatedCatches})`
-      );
-    } catch (error) {
-      showNotification(
-        "error",
-        "statusUpdateError",
-        "statusUpdateErrorDescription"
-      );
-      console.error("Error updating statuses:", error);
     }
+
+    // Build the postData for each row
+    return {
+      transactionId: updatedRow.transactionId || 0,
+      interimQuantity: existingTransactionData ? existingTransactionData.interimQuantity : 0,
+      remarks: existingTransactionData ? existingTransactionData.remarks : "",
+      projectId: projectId,
+      quantitysheetId: updatedRow.srNo,
+      processId: processId,
+      zoneId: existingTransactionData ? existingTransactionData.zoneId : updatedRow.zoneId || 0,
+      machineId: existingTransactionData ? existingTransactionData.machineId : updatedRow.machineId || 0,
+      status: newStatusIndex,
+      alarmId: existingTransactionData ? existingTransactionData.alarmId : updatedRow.alarmId || "",
+      teamId: existingTransactionData ? existingTransactionData.teamId : updatedRow.teamId || [],
+      lotNo: existingTransactionData ? existingTransactionData.lotNo : lotNo,
+      voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : "",
+    };
+  }
+});
+
+// Wait for all data to be collected, and filter out any undefined values
+const bulkData = await Promise.all(updates);
+const validBulkData = bulkData.filter((data) => data !== undefined);
+
+// Step 2: Send a single bulk request to update all the transactions
+if (validBulkData.length > 0) {
+  try {
+    await API.post("/Transactions/Bulk", validBulkData);
+    
+    // Clear selections and fetch updated transactions
+    clearSelections();
+    await fetchTransactions();
+
+    // Show success notification with updated catch numbers
+    const updatedCatches = selectedRowKeys
+      .map((key) => tableData.find((row) => row.srNo === key)?.catchNumber)
+      .filter(Boolean)
+      .join(", ");
+
+    showNotification(
+      "success",
+      "statusUpdateSuccess",
+      "statusUpdateDescription",
+      `(Catches: ${updatedCatches})`
+    );
+  } catch (error) {
+    showNotification(
+      "error",
+      "statusUpdateError",
+      "statusUpdateErrorDescription"
+    );
+    console.error("Error updating statuses:", error);
+  }
+}
+
+
   };
 
   const getSelectedStatus = () => {
