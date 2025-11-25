@@ -41,44 +41,89 @@ console.log("Response Data:", response.data);
     getZone();
   }, [show]); 
 
+  // const handleConfirm = async () => {
+  //   try {
+  //     const updatePromises = data.map(async (row) => {
+  //       let existingTransactionData;
+  //       if (row.transactionId) {
+  //         const response = await API.get(`/Transactions/${row.transactionId}`);
+  //         existingTransactionData = response.data;
+  //         console.log("Existing Transaction Data:", existingTransactionData);
+  //       }
+
+  //       const postData = {
+  //         transactionId: row.transactionId || 0,
+  //         interimQuantity: row.interimQuantity,
+  //         remarks: existingTransactionData ? existingTransactionData.remarks : '',
+  //         projectId: row.projectId,
+  //         quantitysheetId: row.srNo || 0,
+  //         processId: processId,
+  //         zoneId: zoneId,
+  //         machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+  //         status: existingTransactionData ? existingTransactionData.status : 0,
+  //         alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+  //         lotNo: row.lotNo,
+  //         teamId: existingTransactionData ? existingTransactionData.teamId : [],
+  //         voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+  //       };
+
+  //       await API.post('/Transactions', postData);
+  //     });
+
+  //     await Promise.all(updatePromises);
+  //     handleSave(zoneId);
+  //     setSelectedZone()
+  //     setZoneId()
+  //     handleClose();
+  //   } catch (error) {
+  //     console.error('Error updating zone:', error);
+  //   }
+  // };
+
   const handleConfirm = async () => {
-    try {
-      const updatePromises = data.map(async (row) => {
-        let existingTransactionData;
-        if (row.transactionId) {
-          const response = await API.get(`/Transactions/${row.transactionId}`);
-          existingTransactionData = response.data;
-          console.log("Existing Transaction Data:", existingTransactionData);
-        }
+  try {
+    // Create an array of promises to fetch existing transaction data
+    const postData = await Promise.all(data.map(async (row) => {
+      let existingTransactionData;
+      
+      // Fetch existing transaction data if it exists
+      if (row.transactionId) {
+        const response = await API.get(`/Transactions/${row.transactionId}`);
+        existingTransactionData = response.data;
+        console.log("Existing Transaction Data:", existingTransactionData);
+      }
 
-        const postData = {
-          transactionId: row.transactionId || 0,
-          interimQuantity: row.interimQuantity,
-          remarks: existingTransactionData ? existingTransactionData.remarks : '',
-          projectId: row.projectId,
-          quantitysheetId: row.srNo || 0,
-          processId: processId,
-          zoneId: zoneId,
-          machineId: existingTransactionData ? existingTransactionData.machineId : 0,
-          status: existingTransactionData ? existingTransactionData.status : 0,
-          alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-          lotNo: row.lotNo,
-          teamId: existingTransactionData ? existingTransactionData.teamId : [],
-          voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-        };
+      // Build the postData for each row
+      return {
+        transactionId: row.transactionId || 0,
+        interimQuantity: row.interimQuantity,
+        remarks: existingTransactionData ? existingTransactionData.remarks : '',
+        projectId: row.projectId,
+        quantitysheetId: row.srNo || 0,
+        processId: processId,
+        zoneId: zoneId,  // You may need to ensure this is coming from your selected zone
+        machineId: existingTransactionData ? existingTransactionData.machineId : 0,
+        status: existingTransactionData ? existingTransactionData.status : 0,
+        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+        lotNo: row.lotNo,
+        teamId: existingTransactionData ? existingTransactionData.teamId : [],
+        voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+      };
+    }));
 
-        await API.post('/Transactions', postData);
-      });
+    // Send the entire bulk data in a single request
+    await API.post('/Transactions/Bulk', postData);
 
-      await Promise.all(updatePromises);
-      handleSave(zoneId);
-      setSelectedZone()
-      setZoneId()
-      handleClose();
-    } catch (error) {
-      console.error('Error updating zone:', error);
-    }
-  };
+    // After successfully sending the bulk data, do the following:
+    handleSave(zoneId);           // Call your handleSave function with zoneId
+    setSelectedZone(null);        // Reset selected zone
+    setZoneId(null);              // Reset zoneId
+    handleClose();                // Close the modal
+  } catch (error) {
+    console.error('Error updating zone:', error);
+  }
+};
+
 
   return (
     <Modal show={show} onHide={handleClose}>
