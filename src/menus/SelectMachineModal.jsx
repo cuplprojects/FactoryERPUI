@@ -82,45 +82,88 @@ const SelectMachineModal = ({ show, handleClose, data, processId, handleSave }) 
     getZoneData();
   }, [show]);
 
-  const handleConfirm = async () => {
-    try {
-      const updatePromises = data.map(async (row) => {
-        let existingTransactionData;
-        if (row.transactionId) {
-          const response = await API.get(`/Transactions/${row.transactionId}`);
-          existingTransactionData = response.data;
-          console.log('Existing Transaction Data:', existingTransactionData);
-        }
+//   const handleConfirm = async () => {
+//     try {
+//       const updatePromises = data.map(async (row) => {
+//         let existingTransactionData;
+//         if (row.transactionId) {
+//           const response = await API.get(`/Transactions/${row.transactionId}`);
+//           existingTransactionData = response.data;
+//           console.log('Existing Transaction Data:', existingTransactionData);
+//         }
 
-        const postData =data.map(row => ({
-          transactionId: row.transactionId || 0,
-          interimQuantity: row.interimQuantity,
-          remarks: existingTransactionData ? existingTransactionData.remarks : '',
-          projectId: row.projectId,
-          quantitysheetId: row.srNo || 0,
-          processId: processId,
-          zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
-          machineId: machineId,
-          status: existingTransactionData ? existingTransactionData.status : 0,
-          alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
-          lotNo: row.lotNo,
-          teamId: existingTransactionData ? existingTransactionData.teamId : [],
-          voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
-        }));
- // changed /Transactions to /Transactions/Bulk
-        await API.post('/Transactions/Bulk', postData);
-      });
+//         const postData =data.map(row => ({
+//           transactionId: row.transactionId || 0,
+//           interimQuantity: row.interimQuantity,
+//           remarks: existingTransactionData ? existingTransactionData.remarks : '',
+//           projectId: row.projectId,
+//           quantitysheetId: row.srNo || 0,
+//           processId: processId,
+//           zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
+//           machineId: machineId,
+//           status: existingTransactionData ? existingTransactionData.status : 0,
+//           alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+//           lotNo: row.lotNo,
+//           teamId: existingTransactionData ? existingTransactionData.teamId : [],
+//           voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+//         }));
+//  // changed /Transactions to /Transactions/Bulk
+//         await API.post('/Transactions/Bulk', postData);
+//       });
 
-      await Promise.all(updatePromises);
-      handleSave(machineId);
-      setMachineId(null);
-      setSelectedMachine(null);
-      setSelectedZone(null); // Reset zone data after confirmation
-      handleClose();
-    } catch (error) {
-      console.error('Error updating machine:', error);
-    }
-  };
+//       await Promise.all(updatePromises);
+//       handleSave(machineId);
+//       setMachineId(null);
+//       setSelectedMachine(null);
+//       setSelectedZone(null); // Reset zone data after confirmation
+//       handleClose();
+//     } catch (error) {
+//       console.error('Error updating machine:', error);
+//     }
+//   };
+
+const handleConfirm = async () => {
+  try {
+    const postData = data.map(async (row) => {
+      let existingTransactionData;
+      if (row.transactionId) {
+        const response = await API.get(`/Transactions/${row.transactionId}`);
+        existingTransactionData = response.data;
+        console.log('Existing Transaction Data:', existingTransactionData);
+      }
+
+      return {
+        transactionId: row.transactionId || 0,
+        interimQuantity: row.interimQuantity,
+        remarks: existingTransactionData ? existingTransactionData.remarks : '',
+        projectId: row.projectId,
+        quantitysheetId: row.srNo || 0,
+        processId: processId,
+        zoneId: selectedZone ? selectedZone.zoneId : 0, // Send zoneId from selected zone
+        machineId: machineId,
+        status: existingTransactionData ? existingTransactionData.status : 0,
+        alarmId: existingTransactionData ? existingTransactionData.alarmId : "",
+        lotNo: row.lotNo,
+        teamId: existingTransactionData ? existingTransactionData.teamId : [],
+        voiceRecording: existingTransactionData ? existingTransactionData.voiceRecording : ""
+      };
+    });
+
+    // Wait for all the async operations inside the map to complete
+    const bulkData = await Promise.all(postData);
+
+    // Send the bulk data in a single request
+    await API.post('/Transactions/Bulk', bulkData);
+
+    handleSave(machineId);
+    setMachineId(null);
+    setSelectedMachine(null);
+    setSelectedZone(null); // Reset zone data after confirmation
+    handleClose();
+  } catch (error) {
+    console.error('Error updating machine:', error);
+  }
+};
 
   return (
     <Modal show={show} onHide={handleClose}>
